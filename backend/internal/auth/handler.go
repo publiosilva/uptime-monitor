@@ -32,6 +32,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		default:
 			writeError(w, http.StatusInternalServerError, "internal server error")
 		}
+		return
 	}
 
 	writeJSON(w, http.StatusCreated, user.ToResponse())

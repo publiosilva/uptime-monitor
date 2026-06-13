@@ -17,5 +17,19 @@ services:
       timeout: 5s
       retries: 5
 
+  migrate:
+    image: migrate/migrate:v4.18.1
+    container_name: uptime-migrate
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/db/migrations:/migrations:ro
+    command:
+      - -path=/migrations
+      - -database=postgres://${POSTGRES_USER:-uptime}:${POSTGRES_PASSWORD:-uptime}@postgres:5432/${POSTGRES_DB:-uptime_monitor}?sslmode=disable
+      - up
+
 volumes:
   postgres_data:

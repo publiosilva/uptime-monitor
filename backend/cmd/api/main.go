@@ -6,11 +6,13 @@ import (
 	"net/http"
 
 	"uptime-monitor-backend/cmd/api/factory"
+	"uptime-monitor-backend/cmd/api/middleware"
+	"uptime-monitor-backend/internal/auth"
 	"uptime-monitor-backend/internal/config"
 	"uptime-monitor-backend/pkg/database"
 
 	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	chimiddleware "github.com/go-chi/chi/middleware"
 	"github.com/joho/godotenv"
 )
 
@@ -34,8 +36,13 @@ func main() {
 	authHandler := factory.NewAuthHandler(db, &cfg)
 
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(chimiddleware.Logger)
+	r.Use(chimiddleware.Recoverer)
+
+	jwtAdapter := auth.NewJWTAdapter(cfg.JWTSecret)
+	authMiddleware := middleware.NewAuthMiddleware(jwtAdapter)
+
+	r.Use(authMiddleware.Authorize)
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Uptime Monitor API."))

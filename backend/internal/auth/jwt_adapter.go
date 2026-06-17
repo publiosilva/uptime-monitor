@@ -29,3 +29,14 @@ func (j *JWTAdapter) GenerateToken(userID string) (string, error) {
 
 	return s, nil
 }
+
+func (j *JWTAdapter) VerifyToken(token string) (string, error) {
+	t, err := jwt.Parse(token, func(token *jwt.Token) (any, error) {
+		return []byte(j.Secret), nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("verify token: %w", err)
+	}
+
+	return t.Claims.(jwt.MapClaims)["sub"].(string), nil
+}

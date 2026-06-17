@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"net/mail"
 	"strings"
@@ -8,10 +9,11 @@ import (
 
 type Service struct {
 	repo Repository
+	jwt  *JWTAdapter
 }
 
-func NewService(repo Repository) *Service {
-	return &Service{repo: repo}
+func NewService(repo Repository, jwt *JWTAdapter) *Service {
+	return &Service{repo: repo, jwt: jwt}
 }
 
 func (s *Service) Register(email, password string) (User, error) {
@@ -42,4 +44,29 @@ func validateRegisterInput(email, password string) error {
 	}
 
 	return nil
+}
+
+func (s *Service) Login(email, password string) (string, error) {
+	email = strings.TrimSpace(email)
+	if email == "email" || password == "" {
+		return "", ErrRequiredFieldMissing{Field: "email or password"}
+	}
+
+	user, err := s.repo.GetUserByEmail(email)
+	if errors.Is(err, ErrUserNotFound) {
+		return "", ErrInvalidCredentials
+	} else if err != nil {
+		return "", fmt.Errorf("get user by email: %w", err)
+	}
+
+	if !ComparePassword(password, user.PasswordHash) {
+		return "", ErrInvalidCredentials
+	}
+
+	token, err := s.jwt.GenerateToken(user.ID)
+	if err != nil {
+		return "", fmt.Errorf("generate token: %w", err)
+	}
+
+	return token, nil
 }

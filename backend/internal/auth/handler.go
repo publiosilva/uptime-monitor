@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -36,6 +37,26 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusCreated, user.ToResponse())
+}
+
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+	var req LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+	}
+
+	token, err := h.service.Login(req.Email, req.Password)
+	fmt.Println("error", err)
+	if err != nil {
+		if errors.Is(err, ErrInvalidCredentials) {
+			writeError(w, http.StatusUnauthorized, err.Error())
+		} else {
+			writeError(w, http.StatusInternalServerError, "internal server error")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"token": token})
 }
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {

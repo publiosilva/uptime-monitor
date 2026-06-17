@@ -10,6 +10,7 @@ import (
 
 type Repository interface {
 	CreateUser(email, passwordHash string) (User, error)
+	GetUserByEmail(email string) (User, error)
 }
 
 type PostgresRepository struct {
@@ -35,4 +36,21 @@ func (r *PostgresRepository) CreateUser(email, passwordHash string) (User, error
 		return User{}, fmt.Errorf("create user: %w", err)
 	}
 	return user, nil
+}
+
+func (r *PostgresRepository) GetUserByEmail(email string) (User, error) {
+	var user User
+	err := r.db.QueryRow(
+		`SELECT id, email, password_hash FROM users WHERE email = $1`,
+		email,
+	).Scan(&user.ID, &user.Email, &user.PasswordHash)
+
+	switch {
+	case err == sql.ErrNoRows:
+		return User{}, ErrUserNotFound
+	case err != nil:
+		return User{}, fmt.Errorf("query row: %w", err)
+	default:
+		return user, nil
+	}
 }

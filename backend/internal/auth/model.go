@@ -15,18 +15,26 @@ func (e ErrRequiredFieldMissing) Error() string {
 }
 
 var (
-	ErrEmailTaken      = errors.New("email already registered")
-	ErrInvalidEmail    = errors.New("invalid email")
-	ErrInvalidPassword = errors.New("password must be at least 8 characters long")
+	ErrEmailTaken         = errors.New("email already registered")
+	ErrInvalidEmail       = errors.New("invalid email")
+	ErrInvalidPassword    = errors.New("password must be at least 8 characters long")
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrUserNotFound       = errors.New("user not found")
 )
 
 type User struct {
-	ID        string
-	Email     string
-	CreatedAt time.Time
+	ID           string
+	Email        string
+	PasswordHash string
+	CreatedAt    time.Time
 }
 
 type RegisterRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }

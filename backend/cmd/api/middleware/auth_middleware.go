@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 	"uptime-monitor-backend/internal/auth"
@@ -24,13 +25,13 @@ func (m *AuthMiddleware) Authorize(next http.Handler) http.Handler {
 
 		token := r.Header.Get("Authorization")
 		if token == "" {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			writeError(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 
 		userID, err := m.jwtAdapter.VerifyToken(token)
 		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			writeError(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 
@@ -39,4 +40,14 @@ func (m *AuthMiddleware) Authorize(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func writeJSON(w http.ResponseWriter, status int, payload any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(payload)
+}
+
+func writeError(w http.ResponseWriter, status int, message string) {
+	writeJSON(w, status, map[string]string{"error": message})
 }

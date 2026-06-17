@@ -34,6 +34,7 @@ func main() {
 	defer db.Close()
 
 	authHandler := factory.NewAuthHandler(db, &cfg)
+	monitorHandler := factory.NewMonitorHandler(db)
 
 	r := chi.NewRouter()
 	r.Use(chimiddleware.Logger)
@@ -51,6 +52,10 @@ func main() {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Post("/auth/register", authHandler.Register)
 		r.Post("/auth/login", authHandler.Login)
+
+		r.Post("/monitors", monitorHandler.Create)
+		r.Get("/monitors", monitorHandler.List)
+		r.Delete("/monitors/{id}", monitorHandler.Delete)
 	})
 
 	addr := fmt.Sprintf(":%s", cfg.APIPort)

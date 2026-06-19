@@ -8,6 +8,7 @@ import (
 type Repository interface {
 	Create(monitor Monitor) (Monitor, error)
 	ListByUserID(userID string) ([]Monitor, error)
+	ListAll() ([]Monitor, error)
 	DeleteByID(userID, monitorID string) error
 }
 
@@ -21,13 +22,14 @@ func NewRepository(db *sql.DB) *PostgresRepository {
 
 func (r *PostgresRepository) Create(monitor Monitor) (Monitor, error) {
 	err := r.db.QueryRow(
-		`INSERT INTO monitors (user_id, name, url, method, frequency, is_active)
-		 VALUES ($1, $2, $3, $4, $5, $6)
-		 RETURNING id, user_id, name, url, method, frequency, is_active, created_at`,
+		`INSERT INTO monitors (user_id, name, url, method, timeout, frequency, is_active)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)
+		 RETURNING id, user_id, name, url, method, timeout, frequency, is_active, created_at`,
 		monitor.UserID,
 		monitor.Name,
 		monitor.URL,
 		monitor.Method,
+		monitor.Timeout,
 		monitor.Frequency,
 		monitor.IsActive,
 	).Scan(
@@ -36,6 +38,7 @@ func (r *PostgresRepository) Create(monitor Monitor) (Monitor, error) {
 		&monitor.Name,
 		&monitor.URL,
 		&monitor.Method,
+		&monitor.Timeout,
 		&monitor.Frequency,
 		&monitor.IsActive,
 		&monitor.CreatedAt,
@@ -48,7 +51,7 @@ func (r *PostgresRepository) Create(monitor Monitor) (Monitor, error) {
 
 func (r *PostgresRepository) ListByUserID(userID string) ([]Monitor, error) {
 	rows, err := r.db.Query(
-		`SELECT id, user_id, name, url, method, frequency, is_active, created_at
+		`SELECT id, user_id, name, url, method, timeout, frequency, is_active, created_at
 		 FROM monitors
 		 WHERE user_id = $1
 		 ORDER BY created_at DESC`,
@@ -68,6 +71,43 @@ func (r *PostgresRepository) ListByUserID(userID string) ([]Monitor, error) {
 			&monitor.Name,
 			&monitor.URL,
 			&monitor.Method,
+			&monitor.Timeout,
+			&monitor.Frequency,
+			&monitor.IsActive,
+			&monitor.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan monitor: %w", err)
+		}
+		monitors = append(monitors, monitor)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate monitors: %w", err)
+	}
+	return monitors, nil
+}
+
+func (r *PostgresRepository) ListAll() ([]Monitor, error) {
+	rows, err := r.db.Query(
+		`SELECT id, user_id, name, url, method, timeout, frequency, is_active, created_at
+		 FROM monitors
+		 ORDER BY created_at DESC`,
+	)
+
+	if err != nil {
+		return nil, fmt.Errorf("list all monitors: %w", err)
+	}
+	defer rows.Close()
+
+	monitors := make([]Monitor, 0)
+	for rows.Next() {
+		var monitor Monitor
+		if err := rows.Scan(
+			&monitor.ID,
+			&monitor.UserID,
+			&monitor.Name,
+			&monitor.URL,
+			&monitor.Method,
+			&monitor.Timeout,
 			&monitor.Frequency,
 			&monitor.IsActive,
 			&monitor.CreatedAt,

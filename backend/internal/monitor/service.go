@@ -25,6 +25,11 @@ func (s *Service) Create(userID string, req CreateMonitorRequest) (Monitor, erro
 		method = "GET"
 	}
 
+	timeout := req.Timeout
+	if timeout == 0 {
+		timeout = 5
+	}
+
 	frequency := req.Frequency
 	if frequency == 0 {
 		frequency = 60
@@ -35,7 +40,7 @@ func (s *Service) Create(userID string, req CreateMonitorRequest) (Monitor, erro
 		isActive = *req.IsActive
 	}
 
-	if err := validateCreateInput(name, monitorURL, method, frequency); err != nil {
+	if err := validateCreateInput(name, monitorURL, method, timeout, frequency); err != nil {
 		return Monitor{}, err
 	}
 
@@ -44,6 +49,7 @@ func (s *Service) Create(userID string, req CreateMonitorRequest) (Monitor, erro
 		Name:      name,
 		URL:       monitorURL,
 		Method:    method,
+		Timeout:   timeout,
 		Frequency: frequency,
 		IsActive:  isActive,
 	})
@@ -57,6 +63,14 @@ func (s *Service) List(userID string) ([]Monitor, error) {
 	return monitors, nil
 }
 
+func (s *Service) ListAll() ([]Monitor, error) {
+	monitors, err := s.repo.ListAll()
+	if err != nil {
+		return nil, fmt.Errorf("list all monitors: %w", err)
+	}
+	return monitors, nil
+}
+
 func (s *Service) Delete(userID, monitorID string) error {
 	if err := s.repo.DeleteByID(userID, monitorID); err != nil {
 		return err
@@ -64,7 +78,7 @@ func (s *Service) Delete(userID, monitorID string) error {
 	return nil
 }
 
-func validateCreateInput(name, monitorURL, method string, frequency int) error {
+func validateCreateInput(name, monitorURL, method string, timeout, frequency int) error {
 	if name == "" {
 		return ErrRequiredFieldMissing{Field: "name"}
 	}
@@ -85,6 +99,10 @@ func validateCreateInput(name, monitorURL, method string, frequency int) error {
 
 	if !slices.Contains(allowedMethods, method) {
 		return ErrInvalidMethod
+	}
+
+	if timeout < 1 || timeout > 30 {
+		return ErrInvalidTimeout
 	}
 
 	if frequency < 30 || frequency > 86400 {

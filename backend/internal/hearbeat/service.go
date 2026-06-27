@@ -17,3 +17,11 @@ func (s *Service) Create(heartbeat Heartbeat) (Heartbeat, error) {
 	}
 	return heartbeat, nil
 }
+
+func (s *Service) List24hByMonitorID(monitorID string) ([]Heartbeat, error) {
+	heartbeats, err := s.repo.List24hByMonitorID(monitorID)
+	if err != nil {
+		return nil, fmt.Errorf("list heartbeats by monitor id: %w", err)
+	}
+	return heartbeats, nil
+}

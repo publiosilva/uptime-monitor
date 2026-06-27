@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net/http"
 
+	"uptime-monitor-backend/internal/auth"
+
 	"github.com/go-chi/chi"
 )
 
@@ -17,7 +19,7 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
-	userID, ok := userIDFromContext(r)
+	userID, ok := auth.UserIDFromContext(r.Context())
 	if !ok {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -48,7 +50,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
-	userID, ok := userIDFromContext(r)
+	userID, ok := auth.UserIDFromContext(r.Context())
 	if !ok {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -69,7 +71,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
-	userID, ok := userIDFromContext(r)
+	userID, ok := auth.UserIDFromContext(r.Context())
 	if !ok {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -92,11 +94,6 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
-}
-
-func userIDFromContext(r *http.Request) (string, bool) {
-	userID, ok := r.Context().Value("userID").(string)
-	return userID, ok && userID != ""
 }
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {

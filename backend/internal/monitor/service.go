@@ -78,6 +78,14 @@ func (s *Service) Delete(userID, monitorID string) error {
 	return nil
 }
 
+func (s *Service) FindByID(userID, monitorID string) (Monitor, error) {
+	monitor, err := s.repo.FindByID(userID, monitorID)
+	if err != nil {
+		return Monitor{}, fmt.Errorf("find monitor by id: %w", err)
+	}
+	return monitor, nil
+}
+
 func validateCreateInput(name, monitorURL, method string, timeout, frequency int) error {
 	if name == "" {
 		return ErrRequiredFieldMissing{Field: "name"}

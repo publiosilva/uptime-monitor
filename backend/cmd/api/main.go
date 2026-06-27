@@ -9,11 +9,20 @@ import (
 	"uptime-monitor-backend/cmd/api/middleware"
 	"uptime-monitor-backend/internal/auth"
 	"uptime-monitor-backend/internal/config"
+	"uptime-monitor-backend/internal/graph"
+	"uptime-monitor-backend/internal/hearbeat"
+	"uptime-monitor-backend/internal/monitor"
 	"uptime-monitor-backend/pkg/database"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/lru"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	chimiddleware "github.com/go-chi/chi/middleware"
 	"github.com/joho/godotenv"
+	"github.com/vektah/gqlparser/v2/ast"
 )
 
 func main() {
@@ -32,6 +41,27 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
+	monitorRepo := monitor.NewRepository(db)
+	monitorService := monitor.NewService(monitorRepo)
+	hearbeatRepo := hearbeat.NewRepository(db)
+	hearbeatService := hearbeat.NewService(hearbeatRepo)
+
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
+		MonitorService:  monitorService,
+		HearbeatService: hearbeatService,
+	}}))
+
+	srv.AddTransport(transport.Options{})
+	srv.AddTransport(transport.GET{})
+	srv.AddTransport(transport.POST{})
+
+	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
+
+	srv.Use(extension.Introspection{})
+	srv.Use(extension.AutomaticPersistedQuery{
+		Cache: lru.New[string](100),
+	})
 
 	authHandler := factory.NewAuthHandler(db, &cfg)
 	monitorHandler := factory.NewMonitorHandler(db)
@@ -58,7 +88,11 @@ func main() {
 		r.Delete("/monitors/{id}", monitorHandler.Delete)
 	})
 
+	r.Handle("/graphql", playground.Handler("GraphQL playground", "/query"))
+	r.Handle("/query", srv)
+
 	addr := fmt.Sprintf(":%s", cfg.APIPort)
 	log.Printf("listening on %s", addr)
+	log.Printf("connect to http://localhost:%s/ for GraphQL playground", cfg.APIPort)
 	log.Fatal(http.ListenAndServe(addr, r))
 }

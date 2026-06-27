@@ -1,0 +1,23 @@
+type Monitor {
+  id: ID!
+  name: String!
+  stats24h: MonitorStats!
+}
+
+type MonitorStats {
+  uptimePercentage: Float!
+  averageLatencyMs: Float!
+  history: [Heartbeat!]!
+}
+
+type Heartbeat {
+  id: ID!
+  statusCode: Int!
+  latencyMs: Int!
+  isUp: Boolean!
+  createdAt: String!
+}
+
+type Query {
+  getMonitorStats(monitorID: ID!): Monitor!
+}

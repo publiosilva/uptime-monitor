@@ -10,6 +10,7 @@ type Repository interface {
 	ListByUserID(userID string) ([]Monitor, error)
 	ListAll() ([]Monitor, error)
 	DeleteByID(userID, monitorID string) error
+	FindByID(userID, monitorID string) (Monitor, error)
 }
 
 type PostgresRepository struct {
@@ -140,4 +141,19 @@ func (r *PostgresRepository) DeleteByID(userID, monitorID string) error {
 		return ErrMonitorNotFound
 	}
 	return nil
+}
+
+func (r *PostgresRepository) FindByID(userID, monitorID string) (Monitor, error) {
+	var monitor Monitor
+	err := r.db.QueryRow(
+		`SELECT id, user_id, name, url, method, timeout, frequency, is_active, created_at
+		FROM monitors
+		WHERE id = $1 AND user_id = $2`,
+		monitorID,
+		userID,
+	).Scan(&monitor.ID, &monitor.UserID, &monitor.Name, &monitor.URL, &monitor.Method, &monitor.Timeout, &monitor.Frequency, &monitor.IsActive, &monitor.CreatedAt)
+	if err != nil {
+		return Monitor{}, fmt.Errorf("find monitor by id: %w", err)
+	}
+	return monitor, nil
 }

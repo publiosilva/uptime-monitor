@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -18,7 +17,7 @@ func NewAuthMiddleware(jwtAdapter *auth.JWTAdapter) *AuthMiddleware {
 
 func (m *AuthMiddleware) Authorize(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasSuffix(r.URL.Path, "/auth/login") || strings.HasSuffix(r.URL.Path, "/auth/register") {
+		if strings.HasPrefix(r.URL.Path, "/graphql") || strings.HasSuffix(r.URL.Path, "/auth/login") || strings.HasSuffix(r.URL.Path, "/auth/register") {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -35,8 +34,7 @@ func (m *AuthMiddleware) Authorize(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "userID", userID)
-		r = r.WithContext(ctx)
+		r = r.WithContext(auth.WithUserID(r.Context(), userID))
 
 		next.ServeHTTP(w, r)
 	})

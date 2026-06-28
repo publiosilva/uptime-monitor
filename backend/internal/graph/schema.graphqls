@@ -1,6 +1,7 @@
 type Monitor {
   id: ID!
   name: String!
+  isUp: Boolean!
   stats24h: MonitorStats!
 }
 

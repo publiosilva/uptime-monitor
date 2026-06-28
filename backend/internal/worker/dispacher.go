@@ -47,6 +47,10 @@ func (d *Dispatcher) Start() {
 				_, err := d.heartbeatService.Create(heartbeat)
 				if err != nil {
 					log.Printf("Error creating heartbeat: %v\n", err)
+					continue
+				}
+				if err := d.monitorService.Update(monitor.Monitor{ID: heartbeat.MonitorID, IsUp: heartbeat.IsUp}); err != nil {
+					log.Printf("Error updating monitor isUp: %v\n", err)
 				}
 			}
 		}

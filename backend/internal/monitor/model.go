@@ -32,6 +32,7 @@ type Monitor struct {
 	Timeout   int
 	Frequency int
 	IsActive  bool
+	IsUp      bool
 	CreatedAt time.Time
 }
 
@@ -52,6 +53,7 @@ type MonitorResponse struct {
 	Timeout   int       `json:"timeout"`
 	Frequency int       `json:"frequency"`
 	IsActive  bool      `json:"is_active"`
+	IsUp      bool      `json:"is_up"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -64,6 +66,7 @@ func (m Monitor) ToResponse() MonitorResponse {
 		Timeout:   m.Timeout,
 		Frequency: m.Frequency,
 		IsActive:  m.IsActive,
+		IsUp:      m.IsUp,
 		CreatedAt: m.CreatedAt,
 	}
 }

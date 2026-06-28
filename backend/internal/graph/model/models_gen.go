@@ -13,6 +13,7 @@ type Heartbeat struct {
 type Monitor struct {
 	ID       string        `json:"id"`
 	Name     string        `json:"name"`
+	IsUp     bool          `json:"isUp"`
 	Stats24h *MonitorStats `json:"stats24h"`
 }
 

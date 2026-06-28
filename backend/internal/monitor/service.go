@@ -86,6 +86,13 @@ func (s *Service) FindByID(userID, monitorID string) (Monitor, error) {
 	return monitor, nil
 }
 
+func (s *Service) Update(monitor Monitor) error {
+	if err := s.repo.Update(monitor); err != nil {
+		return fmt.Errorf("update monitor: %w", err)
+	}
+	return nil
+}
+
 func validateCreateInput(name, monitorURL, method string, timeout, frequency int) error {
 	if name == "" {
 		return ErrRequiredFieldMissing{Field: "name"}

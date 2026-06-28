@@ -46,6 +46,7 @@ type ComplexityRoot struct {
 
 	Monitor struct {
 		ID       func(childComplexity int) int
+		IsUp     func(childComplexity int) int
 		Name     func(childComplexity int) int
 		Stats24h func(childComplexity int) int
 	}
@@ -124,6 +125,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Monitor.ID(childComplexity), true
+	case "Monitor.isUp":
+		if e.ComplexityRoot.Monitor.IsUp == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Monitor.IsUp(childComplexity), true
 	case "Monitor.name":
 		if e.ComplexityRoot.Monitor.Name == nil {
 			break
@@ -225,7 +232,7 @@ func newExecutionContext(
 	deferredResults chan graphql.DeferredResult,
 ) *executionContext {
 	return &executionContext{
-		ExecutionContextState: graphql.NewExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot](
+		ExecutionContextState: graphql.NewExecutionContextState(
 			opCtx,
 			(*graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot])(execSchema),
 			parsedSchema,
@@ -276,6 +283,8 @@ func (ec *executionContext) childFields_Monitor(ctx context.Context, field graph
 		return ec.fieldContext_Monitor_id(ctx, field)
 	case "name":
 		return ec.fieldContext_Monitor_name(ctx, field)
+	case "isUp":
+		return ec.fieldContext_Monitor_isUp(ctx, field)
 	case "stats24h":
 		return ec.fieldContext_Monitor_stats24h(ctx, field)
 	}
@@ -657,6 +666,29 @@ func (ec *executionContext) _Monitor_name(ctx context.Context, field graphql.Col
 }
 func (ec *executionContext) fieldContext_Monitor_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Monitor", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Monitor_isUp(ctx context.Context, field graphql.CollectedField, obj *model.Monitor) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Monitor_isUp(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsUp, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Monitor_isUp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Monitor", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _Monitor_stats24h(ctx context.Context, field graphql.CollectedField, obj *model.Monitor) (ret graphql.Marshaler) {
@@ -2033,6 +2065,11 @@ func (ec *executionContext) _Monitor(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "name":
 			out.Values[i] = ec._Monitor_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isUp":
+			out.Values[i] = ec._Monitor_isUp(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

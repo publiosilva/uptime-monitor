@@ -11,6 +11,7 @@ type Repository interface {
 	ListAll() ([]Monitor, error)
 	DeleteByID(userID, monitorID string) error
 	FindByID(userID, monitorID string) (Monitor, error)
+	Update(monitor Monitor) error
 }
 
 type PostgresRepository struct {
@@ -25,7 +26,7 @@ func (r *PostgresRepository) Create(monitor Monitor) (Monitor, error) {
 	err := r.db.QueryRow(
 		`INSERT INTO monitors (user_id, name, url, method, timeout, frequency, is_active)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7)
-		 RETURNING id, user_id, name, url, method, timeout, frequency, is_active, created_at`,
+		 RETURNING id, user_id, name, url, method, timeout, frequency, is_active, is_up, created_at`,
 		monitor.UserID,
 		monitor.Name,
 		monitor.URL,
@@ -42,6 +43,7 @@ func (r *PostgresRepository) Create(monitor Monitor) (Monitor, error) {
 		&monitor.Timeout,
 		&monitor.Frequency,
 		&monitor.IsActive,
+		&monitor.IsUp,
 		&monitor.CreatedAt,
 	)
 	if err != nil {
@@ -52,7 +54,7 @@ func (r *PostgresRepository) Create(monitor Monitor) (Monitor, error) {
 
 func (r *PostgresRepository) ListByUserID(userID string) ([]Monitor, error) {
 	rows, err := r.db.Query(
-		`SELECT id, user_id, name, url, method, timeout, frequency, is_active, created_at
+		`SELECT id, user_id, name, url, method, timeout, frequency, is_active, is_up, created_at
 		 FROM monitors
 		 WHERE user_id = $1
 		 ORDER BY created_at DESC`,
@@ -75,6 +77,7 @@ func (r *PostgresRepository) ListByUserID(userID string) ([]Monitor, error) {
 			&monitor.Timeout,
 			&monitor.Frequency,
 			&monitor.IsActive,
+			&monitor.IsUp,
 			&monitor.CreatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("scan monitor: %w", err)
@@ -89,7 +92,7 @@ func (r *PostgresRepository) ListByUserID(userID string) ([]Monitor, error) {
 
 func (r *PostgresRepository) ListAll() ([]Monitor, error) {
 	rows, err := r.db.Query(
-		`SELECT id, user_id, name, url, method, timeout, frequency, is_active, created_at
+		`SELECT id, user_id, name, url, method, timeout, frequency, is_active, is_up, created_at
 		 FROM monitors
 		 ORDER BY created_at DESC`,
 	)
@@ -111,6 +114,7 @@ func (r *PostgresRepository) ListAll() ([]Monitor, error) {
 			&monitor.Timeout,
 			&monitor.Frequency,
 			&monitor.IsActive,
+			&monitor.IsUp,
 			&monitor.CreatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("scan monitor: %w", err)
@@ -146,14 +150,45 @@ func (r *PostgresRepository) DeleteByID(userID, monitorID string) error {
 func (r *PostgresRepository) FindByID(userID, monitorID string) (Monitor, error) {
 	var monitor Monitor
 	err := r.db.QueryRow(
-		`SELECT id, user_id, name, url, method, timeout, frequency, is_active, created_at
+		`SELECT id, user_id, name, url, method, timeout, frequency, is_active, is_up, created_at
 		FROM monitors
 		WHERE id = $1 AND user_id = $2`,
 		monitorID,
 		userID,
-	).Scan(&monitor.ID, &monitor.UserID, &monitor.Name, &monitor.URL, &monitor.Method, &monitor.Timeout, &monitor.Frequency, &monitor.IsActive, &monitor.CreatedAt)
+	).Scan(
+		&monitor.ID,
+		&monitor.UserID,
+		&monitor.Name,
+		&monitor.URL,
+		&monitor.Method,
+		&monitor.Timeout,
+		&monitor.Frequency,
+		&monitor.IsActive,
+		&monitor.IsUp,
+		&monitor.CreatedAt,
+	)
 	if err != nil {
 		return Monitor{}, fmt.Errorf("find monitor by id: %w", err)
 	}
 	return monitor, nil
+}
+
+func (r *PostgresRepository) Update(monitor Monitor) error {
+	result, err := r.db.Exec(
+		`UPDATE monitors SET is_up = $1 WHERE id = $2`,
+		monitor.IsUp,
+		monitor.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("update monitor: %w", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("rows affected: %w", err)
+	}
+	if rowsAffected == 0 {
+		return ErrMonitorNotFound
+	}
+	return nil
 }

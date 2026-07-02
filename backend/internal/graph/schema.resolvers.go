@@ -13,18 +13,18 @@ import (
 )
 
 // GetMonitorStats is the resolver for the getMonitorStats field.
-func (r *queryResolver) GetMonitorStats(ctx context.Context, monitorID string) (*model.Monitor, error) {
+func (r *queryResolver) GetMonitorStats(ctx context.Context, monitor_id string) (*model.Monitor, error) {
 	userID, ok := auth.UserIDFromContext(ctx)
 	if !ok {
 		return nil, fmt.Errorf("Not authorized")
 	}
 
-	monitor, err := r.MonitorService.FindByID(userID, monitorID)
+	monitor, err := r.MonitorService.FindByUserAndID(userID, monitor_id)
 	if err != nil {
 		return nil, fmt.Errorf("find monitor by id: %w", err)
 	}
 
-	heartbeats, err := r.HearbeatService.List24hByMonitorID(monitorID)
+	heartbeats, err := r.HearbeatService.List24hBymonitor_id(monitor_id)
 	if err != nil {
 		return nil, fmt.Errorf("list heartbeats by monitor id: %w", err)
 	}

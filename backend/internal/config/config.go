@@ -9,6 +9,7 @@ type Config struct {
 	DatabaseURL string
 	APIPort     string
 	JWTSecret   string
+	WSPort      string
 }
 
 func Load() (Config, error) {
@@ -27,9 +28,15 @@ func Load() (Config, error) {
 		port = "3333"
 	}
 
+	wsPort := os.Getenv("WS_PORT")
+	if wsPort == "" {
+		wsPort = "3334"
+	}
+
 	return Config{
 		DatabaseURL: dbURL,
 		APIPort:     port,
 		JWTSecret:   jwtSecret,
+		WSPort:      wsPort,
 	}, nil
 }

@@ -77,13 +77,13 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	monitorID := chi.URLParam(r, "id")
-	if monitorID == "" {
+	monitor_id := chi.URLParam(r, "id")
+	if monitor_id == "" {
 		writeError(w, http.StatusBadRequest, "monitor id is required")
 		return
 	}
 
-	err := h.service.Delete(userID, monitorID)
+	err := h.service.Delete(userID, monitor_id)
 	if err != nil {
 		if errors.Is(err, ErrMonitorNotFound) {
 			writeError(w, http.StatusNotFound, err.Error())

@@ -58,7 +58,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetMonitorStats func(childComplexity int, monitorID string) int
+		GetMonitorStats func(childComplexity int, monitor_id string) int
 	}
 }
 
@@ -67,7 +67,7 @@ type ComplexityRoot struct {
 // region    ************************** generated!.gotpl **************************
 
 type QueryResolver interface {
-	GetMonitorStats(ctx context.Context, monitorID string) (*model.Monitor, error)
+	GetMonitorStats(ctx context.Context, monitor_id string) (*model.Monitor, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -173,7 +173,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Query.GetMonitorStats(childComplexity, args["monitorID"].(string)), true
+		return e.ComplexityRoot.Query.GetMonitorStats(childComplexity, args["monitor_id"].(string)), true
 
 	}
 	return 0, false
@@ -436,14 +436,14 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_getMonitorStats_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
-	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "monitorID",
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "monitor_id",
 		func(ctx context.Context, v any) (string, error) {
 			return ec.unmarshalNID2string(ctx, v)
 		})
 	if err != nil {
 		return nil, err
 	}
-	args["monitorID"] = arg0
+	args["monitor_id"] = arg0
 	return args, nil
 }
 
@@ -811,7 +811,7 @@ func (ec *executionContext) _Query_getMonitorStats(ctx context.Context, field gr
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Query().GetMonitorStats(ctx, fc.Args["monitorID"].(string))
+			return ec.Resolvers.Query().GetMonitorStats(ctx, fc.Args["monitor_id"].(string))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Monitor) graphql.Marshaler {

@@ -20,5 +20,5 @@ type Heartbeat {
 }
 
 type Query {
-  getMonitorStats(monitorID: ID!): Monitor!
+  getMonitorStats(monitor_id: ID!): Monitor!
 }

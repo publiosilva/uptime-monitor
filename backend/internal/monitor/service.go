@@ -71,15 +71,23 @@ func (s *Service) ListAll() ([]Monitor, error) {
 	return monitors, nil
 }
 
-func (s *Service) Delete(userID, monitorID string) error {
-	if err := s.repo.DeleteByID(userID, monitorID); err != nil {
+func (s *Service) Delete(userID, monitor_id string) error {
+	if err := s.repo.DeleteByID(userID, monitor_id); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *Service) FindByID(userID, monitorID string) (Monitor, error) {
-	monitor, err := s.repo.FindByID(userID, monitorID)
+func (s *Service) FindByUserAndID(userID, monitor_id string) (Monitor, error) {
+	monitor, err := s.repo.FindByUserAndID(userID, monitor_id)
+	if err != nil {
+		return Monitor{}, fmt.Errorf("find monitor by user and id: %w", err)
+	}
+	return monitor, nil
+}
+
+func (s *Service) FindByID(monitor_id string) (Monitor, error) {
+	monitor, err := s.repo.FindByID(monitor_id)
 	if err != nil {
 		return Monitor{}, fmt.Errorf("find monitor by id: %w", err)
 	}

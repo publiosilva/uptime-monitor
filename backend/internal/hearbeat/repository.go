@@ -7,7 +7,7 @@ import (
 
 type Repository interface {
 	Create(heartbeat Heartbeat) (Heartbeat, error)
-	List24hByMonitorID(monitorID string) ([]Heartbeat, error)
+	List24hBymonitor_id(monitor_id string) ([]Heartbeat, error)
 }
 
 type PostgresRepository struct {
@@ -44,14 +44,14 @@ func (r *PostgresRepository) Create(heartbeat Heartbeat) (Heartbeat, error) {
 	return heartbeat, nil
 }
 
-func (r *PostgresRepository) List24hByMonitorID(monitorID string) ([]Heartbeat, error) {
+func (r *PostgresRepository) List24hBymonitor_id(monitor_id string) ([]Heartbeat, error) {
 	rows, err := r.db.Query(
 		`SELECT id, monitor_id, status_code, latency_ms, is_up, error_message, created_at
 		FROM heartbeats
 		WHERE monitor_id = $1
 		AND created_at >= NOW() - INTERVAL '24 hours'
 		ORDER BY created_at DESC`,
-		monitorID,
+		monitor_id,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("list heartbeats by monitor id: %w", err)

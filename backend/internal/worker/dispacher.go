@@ -3,32 +3,39 @@ package worker
 import (
 	"context"
 	"log"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 	"uptime-monitor-backend/internal/hearbeat"
 	"uptime-monitor-backend/internal/monitor"
+	"uptime-monitor-backend/internal/notification"
 )
 
 type Dispatcher struct {
 	prober           *Prober
 	monitorService   *monitor.Service
 	heartbeatService *hearbeat.Service
+	topicHub         *notification.TopicHub
 }
 
-func NewDispatcher(prober *Prober, monitorService *monitor.Service, heartbeatService *hearbeat.Service) *Dispatcher {
-	return &Dispatcher{prober: prober, monitorService: monitorService, heartbeatService: heartbeatService}
+func NewDispatcher(
+	prober *Prober,
+	monitorService *monitor.Service,
+	heartbeatService *hearbeat.Service,
+	topicHub *notification.TopicHub,
+) *Dispatcher {
+	return &Dispatcher{
+		prober:           prober,
+		monitorService:   monitorService,
+		heartbeatService: heartbeatService,
+		topicHub:         topicHub,
+	}
 }
 
 const (
 	monitorChanBufferSize = 1000
 )
 
-func (d *Dispatcher) Start() {
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-
+func (d *Dispatcher) Start(ctx context.Context) {
 	monitorChan := make(chan monitor.Monitor, monitorChanBufferSize)
 	heartbeatChan := make(chan hearbeat.Heartbeat, monitorChanBufferSize)
 
@@ -49,8 +56,24 @@ func (d *Dispatcher) Start() {
 					log.Printf("Error creating heartbeat: %v\n", err)
 					continue
 				}
+				mon, err := d.monitorService.FindByID(heartbeat.MonitorID)
+				if err != nil {
+					log.Printf("Error getting monitor: %v\n", err)
+					continue
+				}
 				if err := d.monitorService.Update(monitor.Monitor{ID: heartbeat.MonitorID, IsUp: heartbeat.IsUp}); err != nil {
 					log.Printf("Error updating monitor isUp: %v\n", err)
+				}
+				if mon.IsUp != heartbeat.IsUp {
+					d.topicHub.Broadcast <- notification.TopicMessage{
+						Topic: mon.UserID,
+						Payload: map[string]any{
+							"monitor_name": mon.Name,
+							"monitorId":    mon.ID,
+							"is_up":        heartbeat.IsUp,
+							"timestamp":    time.Now().Unix(),
+						},
+					}
 				}
 			}
 		}
@@ -102,9 +125,6 @@ func (d *Dispatcher) Start() {
 		scheduleWg.Wait()
 		log.Println("All monitor schedulers stopped.")
 	})
-
-	<-ctx.Done()
-	log.Println("Context cancelled, stopping dispatcher.")
 
 	workerWg.Wait()
 	log.Println("All workers stopped.")

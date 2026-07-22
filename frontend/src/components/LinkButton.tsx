@@ -7,7 +7,7 @@ type LinkButtonProps = {
 }
 
 export default function LinkButton({ children, to, onClick }: LinkButtonProps) {
-    const className = 'text-cyan-400 hover:text-cyan-300 font-semibold'
+    const className = 'text-cyan-400 hover:text-cyan-300 font-semibold text-base'
 
     if (to) {
         return (

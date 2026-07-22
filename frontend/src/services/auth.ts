@@ -10,6 +10,11 @@ type LoginCredentials = {
     password: string
 }
 
+type RegisterCredentials = {
+    email: string
+    password: string
+}
+
 export const authService = {
     getToken,
     setToken,
@@ -29,6 +34,13 @@ export const authService = {
         return token
     },
 
+    async register({ email, password }: RegisterCredentials): Promise<void> {
+        await apiRequest('/api/v1/auth/register', {
+            method: 'POST',
+            body: JSON.stringify({ email, password })
+        })
+    },
+    
     logout(): void {
         clearToken()
     },

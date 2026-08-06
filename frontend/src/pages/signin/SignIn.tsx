@@ -94,7 +94,7 @@ export default function SignIn() {
                             error={errors.password?.message}
                             {...register('password')}
                         />
-                        <Button type="submit" disabled={isSubmitting}>
+                        <Button type="submit" size="lg" className="w-full mt-1" disabled={isSubmitting}>
                             {isSubmitting ? 'Signing in…' : 'Sign in'}
                         </Button>
                     </form>

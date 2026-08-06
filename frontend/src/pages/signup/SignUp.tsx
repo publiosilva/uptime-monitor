@@ -107,7 +107,7 @@ export default function SignUp() {
                             error={errors.confirmPassword?.message}
                             {...register('confirmPassword')}
                         />
-                        <Button type="submit" disabled={isSubmitting}>
+                        <Button type="submit" size="lg" className="w-full mt-1" disabled={isSubmitting}>
                             {isSubmitting ? 'Creating account…' : 'Create account'}
                         </Button>
                     </form>

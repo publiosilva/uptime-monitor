@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Home from './pages/home/Home'
 import SignIn from './pages/signin/SignIn'
 import SignUp from './pages/signup/SignUp'
+import Details from './pages/details/Details'
 
 export default function AppRoutes() {
     return (
@@ -32,6 +33,14 @@ export default function AppRoutes() {
                 element={(
                     <ProtectedRoute>
                         <Home />
+                    </ProtectedRoute>
+                )}
+            />
+            <Route
+                path="/details/:id"
+                element={(
+                    <ProtectedRoute>
+                        <Details />
                     </ProtectedRoute>
                 )}
             />

@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -13,6 +14,7 @@ type Repository interface {
 	FindByUserAndID(userID, monitor_id string) (Monitor, error)
 	FindByID(monitor_id string) (Monitor, error)
 	Update(monitor Monitor) error
+	UpdateByUserAndID(userID string, monitor Monitor) (Monitor, error)
 }
 
 type PostgresRepository struct {
@@ -169,6 +171,9 @@ func (r *PostgresRepository) FindByUserAndID(userID, monitor_id string) (Monitor
 		&monitor.CreatedAt,
 	)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Monitor{}, ErrMonitorNotFound
+		}
 		return Monitor{}, fmt.Errorf("find monitor by user and id: %w", err)
 	}
 	return monitor, nil
@@ -217,4 +222,39 @@ func (r *PostgresRepository) Update(monitor Monitor) error {
 		return ErrMonitorNotFound
 	}
 	return nil
+}
+
+func (r *PostgresRepository) UpdateByUserAndID(userID string, monitor Monitor) (Monitor, error) {
+	err := r.db.QueryRow(
+		`UPDATE monitors
+		 SET name = $1, url = $2, method = $3, timeout = $4, frequency = $5, is_active = $6
+		 WHERE id = $7 AND user_id = $8
+		 RETURNING id, user_id, name, url, method, timeout, frequency, is_active, is_up, created_at`,
+		monitor.Name,
+		monitor.URL,
+		monitor.Method,
+		monitor.Timeout,
+		monitor.Frequency,
+		monitor.IsActive,
+		monitor.ID,
+		userID,
+	).Scan(
+		&monitor.ID,
+		&monitor.UserID,
+		&monitor.Name,
+		&monitor.URL,
+		&monitor.Method,
+		&monitor.Timeout,
+		&monitor.Frequency,
+		&monitor.IsActive,
+		&monitor.IsUp,
+		&monitor.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Monitor{}, ErrMonitorNotFound
+		}
+		return Monitor{}, fmt.Errorf("update monitor by user and id: %w", err)
+	}
+	return monitor, nil
 }

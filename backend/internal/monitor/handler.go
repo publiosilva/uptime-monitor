@@ -96,6 +96,72 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	monitor_id := chi.URLParam(r, "id")
+	if monitor_id == "" {
+		writeError(w, http.StatusBadRequest, "monitor id is required")
+		return
+	}
+
+	monitor, err := h.service.Get(userID, monitor_id)
+	if err != nil {
+		if errors.Is(err, ErrMonitorNotFound) {
+			writeError(w, http.StatusNotFound, err.Error())
+			return
+		}
+		writeError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, monitor.ToResponse())
+}
+
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.UserIDFromContext(r.Context())
+	if !ok {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	monitor_id := chi.URLParam(r, "id")
+	if monitor_id == "" {
+		writeError(w, http.StatusBadRequest, "monitor id is required")
+		return
+	}
+
+	var req CreateMonitorRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	monitor, err := h.service.UpdateByUser(userID, monitor_id, req)
+	if err != nil {
+		switch {
+		case errors.As(err, &ErrRequiredFieldMissing{}),
+			errors.Is(err, ErrInvalidName),
+			errors.Is(err, ErrInvalidURL),
+			errors.Is(err, ErrInvalidMethod),
+			errors.Is(err, ErrInvalidTimeout),
+			errors.Is(err, ErrInvalidFrequency):
+			writeError(w, http.StatusBadRequest, err.Error())
+		case errors.Is(err, ErrMonitorNotFound):
+			writeError(w, http.StatusNotFound, err.Error())
+		default:
+			writeError(w, http.StatusInternalServerError, "internal server error")
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, monitor.ToResponse())
+}
+
 func writeJSON(w http.ResponseWriter, status int, payload any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

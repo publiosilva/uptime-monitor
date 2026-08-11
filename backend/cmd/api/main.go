@@ -85,6 +85,8 @@ func main() {
 
 		r.Post("/monitors", monitorHandler.Create)
 		r.Get("/monitors", monitorHandler.List)
+		r.Get("/monitors/{id}", monitorHandler.Get)
+		r.Put("/monitors/{id}", monitorHandler.Update)
 		r.Delete("/monitors/{id}", monitorHandler.Delete)
 	})
 

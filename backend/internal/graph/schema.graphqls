@@ -1,7 +1,13 @@
 type Monitor {
   id: ID!
   name: String!
+  url: String!
+  method: String!
+  timeout: Int!
+  frequency: Int!
+  isActive: Boolean!
   isUp: Boolean!
+  createdAt: String!
   stats24h: MonitorStats!
 }
 

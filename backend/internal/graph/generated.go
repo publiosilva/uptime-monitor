@@ -45,10 +45,16 @@ type ComplexityRoot struct {
 	}
 
 	Monitor struct {
-		ID       func(childComplexity int) int
-		IsUp     func(childComplexity int) int
-		Name     func(childComplexity int) int
-		Stats24h func(childComplexity int) int
+		CreatedAt func(childComplexity int) int
+		Frequency func(childComplexity int) int
+		ID        func(childComplexity int) int
+		IsActive  func(childComplexity int) int
+		IsUp      func(childComplexity int) int
+		Method    func(childComplexity int) int
+		Name      func(childComplexity int) int
+		Stats24h  func(childComplexity int) int
+		Timeout   func(childComplexity int) int
+		URL       func(childComplexity int) int
 	}
 
 	MonitorStats struct {
@@ -58,7 +64,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		GetMonitorStats func(childComplexity int, monitor_id string) int
+		GetMonitorStats func(childComplexity int, monitorID string) int
 	}
 }
 
@@ -67,7 +73,7 @@ type ComplexityRoot struct {
 // region    ************************** generated!.gotpl **************************
 
 type QueryResolver interface {
-	GetMonitorStats(ctx context.Context, monitor_id string) (*model.Monitor, error)
+	GetMonitorStats(ctx context.Context, monitorID string) (*model.Monitor, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -119,18 +125,42 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Heartbeat.StatusCode(childComplexity), true
 
+	case "Monitor.createdAt":
+		if e.ComplexityRoot.Monitor.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Monitor.CreatedAt(childComplexity), true
+	case "Monitor.frequency":
+		if e.ComplexityRoot.Monitor.Frequency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Monitor.Frequency(childComplexity), true
 	case "Monitor.id":
 		if e.ComplexityRoot.Monitor.ID == nil {
 			break
 		}
 
 		return e.ComplexityRoot.Monitor.ID(childComplexity), true
+	case "Monitor.isActive":
+		if e.ComplexityRoot.Monitor.IsActive == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Monitor.IsActive(childComplexity), true
 	case "Monitor.isUp":
 		if e.ComplexityRoot.Monitor.IsUp == nil {
 			break
 		}
 
 		return e.ComplexityRoot.Monitor.IsUp(childComplexity), true
+	case "Monitor.method":
+		if e.ComplexityRoot.Monitor.Method == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Monitor.Method(childComplexity), true
 	case "Monitor.name":
 		if e.ComplexityRoot.Monitor.Name == nil {
 			break
@@ -143,6 +173,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Monitor.Stats24h(childComplexity), true
+	case "Monitor.timeout":
+		if e.ComplexityRoot.Monitor.Timeout == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Monitor.Timeout(childComplexity), true
+	case "Monitor.url":
+		if e.ComplexityRoot.Monitor.URL == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Monitor.URL(childComplexity), true
 
 	case "MonitorStats.averageLatencyMs":
 		if e.ComplexityRoot.MonitorStats.AverageLatencyMs == nil {
@@ -232,7 +274,7 @@ func newExecutionContext(
 	deferredResults chan graphql.DeferredResult,
 ) *executionContext {
 	return &executionContext{
-		ExecutionContextState: graphql.NewExecutionContextState(
+		ExecutionContextState: graphql.NewExecutionContextState[ResolverRoot, DirectiveRoot, ComplexityRoot](
 			opCtx,
 			(*graphql.ExecutableSchemaState[ResolverRoot, DirectiveRoot, ComplexityRoot])(execSchema),
 			parsedSchema,
@@ -283,8 +325,20 @@ func (ec *executionContext) childFields_Monitor(ctx context.Context, field graph
 		return ec.fieldContext_Monitor_id(ctx, field)
 	case "name":
 		return ec.fieldContext_Monitor_name(ctx, field)
+	case "url":
+		return ec.fieldContext_Monitor_url(ctx, field)
+	case "method":
+		return ec.fieldContext_Monitor_method(ctx, field)
+	case "timeout":
+		return ec.fieldContext_Monitor_timeout(ctx, field)
+	case "frequency":
+		return ec.fieldContext_Monitor_frequency(ctx, field)
+	case "isActive":
+		return ec.fieldContext_Monitor_isActive(ctx, field)
 	case "isUp":
 		return ec.fieldContext_Monitor_isUp(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_Monitor_createdAt(ctx, field)
 	case "stats24h":
 		return ec.fieldContext_Monitor_stats24h(ctx, field)
 	}
@@ -668,6 +722,121 @@ func (ec *executionContext) fieldContext_Monitor_name(_ context.Context, field g
 	return graphql.NewScalarFieldContext("Monitor", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _Monitor_url(ctx context.Context, field graphql.CollectedField, obj *model.Monitor) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Monitor_url(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.URL, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Monitor_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Monitor", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Monitor_method(ctx context.Context, field graphql.CollectedField, obj *model.Monitor) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Monitor_method(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Method, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Monitor_method(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Monitor", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Monitor_timeout(ctx context.Context, field graphql.CollectedField, obj *model.Monitor) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Monitor_timeout(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Timeout, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int32) graphql.Marshaler {
+			return ec.marshalNInt2int32(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Monitor_timeout(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Monitor", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Monitor_frequency(ctx context.Context, field graphql.CollectedField, obj *model.Monitor) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Monitor_frequency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Frequency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int32) graphql.Marshaler {
+			return ec.marshalNInt2int32(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Monitor_frequency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Monitor", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _Monitor_isActive(ctx context.Context, field graphql.CollectedField, obj *model.Monitor) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Monitor_isActive(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsActive, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Monitor_isActive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Monitor", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _Monitor_isUp(ctx context.Context, field graphql.CollectedField, obj *model.Monitor) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -689,6 +858,29 @@ func (ec *executionContext) _Monitor_isUp(ctx context.Context, field graphql.Col
 }
 func (ec *executionContext) fieldContext_Monitor_isUp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Monitor", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _Monitor_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.Monitor) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Monitor_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Monitor_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Monitor", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Monitor_stats24h(ctx context.Context, field graphql.CollectedField, obj *model.Monitor) (ret graphql.Marshaler) {
@@ -2068,8 +2260,38 @@ func (ec *executionContext) _Monitor(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "url":
+			out.Values[i] = ec._Monitor_url(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "method":
+			out.Values[i] = ec._Monitor_method(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "timeout":
+			out.Values[i] = ec._Monitor_timeout(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "frequency":
+			out.Values[i] = ec._Monitor_frequency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isActive":
+			out.Values[i] = ec._Monitor_isActive(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "isUp":
 			out.Values[i] = ec._Monitor_isUp(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._Monitor_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

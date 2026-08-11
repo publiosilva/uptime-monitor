@@ -11,10 +11,16 @@ type Heartbeat struct {
 }
 
 type Monitor struct {
-	ID       string        `json:"id"`
-	Name     string        `json:"name"`
-	IsUp     bool          `json:"isUp"`
-	Stats24h *MonitorStats `json:"stats24h"`
+	ID        string        `json:"id"`
+	Name      string        `json:"name"`
+	URL       string        `json:"url"`
+	Method    string        `json:"method"`
+	Timeout   int32         `json:"timeout"`
+	Frequency int32         `json:"frequency"`
+	IsActive  bool          `json:"isActive"`
+	IsUp      bool          `json:"isUp"`
+	CreatedAt string        `json:"createdAt"`
+	Stats24h  *MonitorStats `json:"stats24h"`
 }
 
 type MonitorStats struct {

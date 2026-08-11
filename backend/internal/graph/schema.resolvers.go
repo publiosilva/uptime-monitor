@@ -8,23 +8,24 @@ package graph
 import (
 	"context"
 	"fmt"
+	"time"
 	"uptime-monitor-backend/internal/auth"
 	"uptime-monitor-backend/internal/graph/model"
 )
 
 // GetMonitorStats is the resolver for the getMonitorStats field.
-func (r *queryResolver) GetMonitorStats(ctx context.Context, monitor_id string) (*model.Monitor, error) {
+func (r *queryResolver) GetMonitorStats(ctx context.Context, monitorID string) (*model.Monitor, error) {
 	userID, ok := auth.UserIDFromContext(ctx)
 	if !ok {
 		return nil, fmt.Errorf("Not authorized")
 	}
 
-	monitor, err := r.MonitorService.FindByUserAndID(userID, monitor_id)
+	monitor, err := r.MonitorService.FindByUserAndID(userID, monitorID)
 	if err != nil {
 		return nil, fmt.Errorf("find monitor by id: %w", err)
 	}
 
-	heartbeats, err := r.HearbeatService.List24hBymonitor_id(monitor_id)
+	heartbeats, err := r.HearbeatService.List24hBymonitor_id(monitorID)
 	if err != nil {
 		return nil, fmt.Errorf("list heartbeats by monitor id: %w", err)
 	}
@@ -33,9 +34,15 @@ func (r *queryResolver) GetMonitorStats(ctx context.Context, monitor_id string) 
 	averageLatency := calculateAverageLatency(heartbeats)
 
 	return &model.Monitor{
-		ID:   monitor.ID,
-		Name: monitor.Name,
-		IsUp: monitor.IsUp,
+		ID:        monitor.ID,
+		Name:      monitor.Name,
+		URL:       monitor.URL,
+		Method:    monitor.Method,
+		Timeout:   int32(monitor.Timeout),
+		Frequency: int32(monitor.Frequency),
+		IsActive:  monitor.IsActive,
+		IsUp:      monitor.IsUp,
+		CreatedAt: monitor.CreatedAt.Format(time.DateTime),
 		Stats24h: &model.MonitorStats{
 			UptimePercentage: uptimePercentage,
 			AverageLatencyMs: averageLatency,

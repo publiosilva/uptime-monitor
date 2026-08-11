@@ -78,6 +78,49 @@ func (s *Service) Delete(userID, monitor_id string) error {
 	return nil
 }
 
+func (s *Service) Get(userID, monitor_id string) (Monitor, error) {
+	return s.repo.FindByUserAndID(userID, monitor_id)
+}
+
+func (s *Service) UpdateByUser(userID, monitor_id string, req CreateMonitorRequest) (Monitor, error) {
+	name := strings.TrimSpace(req.Name)
+	monitorURL := strings.TrimSpace(req.URL)
+	method := strings.ToUpper(strings.TrimSpace(req.Method))
+	if method == "" {
+		method = "GET"
+	}
+
+	timeout := req.Timeout
+	if timeout == 0 {
+		timeout = 5
+	}
+
+	frequency := req.Frequency
+	if frequency == 0 {
+		frequency = 60
+	}
+
+	isActive := true
+	if req.IsActive != nil {
+		isActive = *req.IsActive
+	}
+
+	if err := validateCreateInput(name, monitorURL, method, timeout, frequency); err != nil {
+		return Monitor{}, err
+	}
+
+	return s.repo.UpdateByUserAndID(userID, Monitor{
+		ID:        monitor_id,
+		UserID:    userID,
+		Name:      name,
+		URL:       monitorURL,
+		Method:    method,
+		Timeout:   timeout,
+		Frequency: frequency,
+		IsActive:  isActive,
+	})
+}
+
 func (s *Service) FindByUserAndID(userID, monitor_id string) (Monitor, error) {
 	monitor, err := s.repo.FindByUserAndID(userID, monitor_id)
 	if err != nil {

@@ -11,6 +11,10 @@ export default defineConfig({
         target: 'http://localhost:3333',
         changeOrigin: true,
       },
+      '/query': {
+        target: 'http://localhost:3333',
+        changeOrigin: true,
+      },
     },
   },
 })

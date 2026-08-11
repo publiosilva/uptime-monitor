@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Eye, MoreVertical, Trash2 } from 'lucide-react'
+import { Eye, MoreVertical, Pause, Play, Trash2 } from 'lucide-react'
 import type { Monitor } from '../../../services/monitor'
+import { monitorService } from '../../../services/monitor'
 import DeleteMonitor from './DeleteMonitor'
 
 type Status = 'up' | 'down' | 'paused'
@@ -71,12 +72,15 @@ function MethodBadge({ method }: { method: Monitor['method'] }) {
 export default function MonitorCard({
   monitor,
   onDeleted,
+  onUpdated,
 }: {
   monitor: Monitor
   onDeleted?: () => void
+  onUpdated?: () => void
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDeleteMonitorOpen, setIsDeleteMonitorOpen] = useState(false)
+  const [isTogglingActive, setIsTogglingActive] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const status = getStatus(monitor)
@@ -90,6 +94,25 @@ export default function MonitorCard({
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  async function toggleActive(e: React.MouseEvent) {
+    e.stopPropagation()
+    setIsMenuOpen(false)
+    try {
+      setIsTogglingActive(true)
+      await monitorService.update(monitor.id, {
+        name: monitor.name,
+        url: monitor.url,
+        method: monitor.method,
+        frequency: monitor.frequency,
+        timeout: monitor.timeout,
+        is_active: !monitor.is_active,
+      })
+      onUpdated?.()
+    } finally {
+      setIsTogglingActive(false)
+    }
+  }
 
   return (
     <>
@@ -131,7 +154,7 @@ export default function MonitorCard({
                 <MoreVertical className="w-3.5 h-3.5" />
               </button>
               {isMenuOpen && (
-                <div className="absolute right-0 top-7 z-50 bg-[#0d1829] border border-[#1e3558] rounded-xl shadow-2xl min-w-[120px] py-1">
+                <div className="absolute right-0 top-7 z-50 bg-[#0d1829] border border-[#1e3558] rounded-xl shadow-2xl min-w-[140px] py-1">
                   <button
                     type="button"
                     className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-[#172240] flex items-center gap-2"
@@ -142,6 +165,22 @@ export default function MonitorCard({
                     }}
                   >
                     <Eye className="w-3 h-3" /> View
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isTogglingActive}
+                    className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-[#172240] flex items-center gap-2 disabled:opacity-40"
+                    onClick={toggleActive}
+                  >
+                    {monitor.is_active ? (
+                      <>
+                        <Pause className="w-3 h-3" /> Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3 h-3" /> Resume
+                      </>
+                    )}
                   </button>
                   <button
                     type="button"

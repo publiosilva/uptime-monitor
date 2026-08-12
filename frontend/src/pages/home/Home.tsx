@@ -3,58 +3,27 @@ import { useNavigate } from 'react-router-dom'
 import { Activity, LogOut, Plus } from 'lucide-react'
 import Logo from '../../components/Logo'
 import Button from '../../components/Button'
+import Toast from '../../components/Toast'
 import AddMonitor from './components/AddMonitor'
 import MonitorCard from './components/MonitorCard'
+import SkeletonCard from './components/SkeletonCard'
+import StatCard from './components/StatCard'
 import type { Monitor } from '../../services/monitor'
 import { monitorService } from '../../services/monitor'
 import { authService } from '../../services/auth'
+import { useWebSocket } from '../../hooks/websocket'
 
-function cn(...classes: (string | false | null | undefined)[]) {
-  return classes.filter(Boolean).join(' ')
+type MonitorStateMessage = {
+  monitor_name: string
+  monitorId: string
+  is_up: boolean
+  timestamp: number
 }
 
-function StatCard({
-  label,
-  value,
-  sub,
-  accent = 'slate',
-}: {
-  label: string
-  value: string | number
-  sub?: string
-  accent?: 'cyan' | 'emerald' | 'red' | 'slate'
-}) {
-  const accentCls = {
-    cyan: 'text-cyan-400',
-    emerald: 'text-emerald-400',
-    red: 'text-red-400',
-    slate: 'text-slate-300',
-  }[accent]
-
-  return (
-    <div className="bg-[#0c1422] border border-[#1a2d4a] rounded-xl p-4 flex flex-col gap-1">
-      <span className="text-xs text-[#4a6080] font-semibold uppercase tracking-widest">{label}</span>
-      <span className={cn('text-2xl font-mono font-semibold leading-tight', accentCls)}>{value}</span>
-      {sub && <span className="text-xs text-[#3a5070]">{sub}</span>}
-    </div>
-  )
-}
-
-function SkeletonCard() {
-  return (
-    <div className="bg-[#0c1422] border border-[#1a2d4a] rounded-xl p-4 flex flex-col gap-3 animate-pulse">
-      <div className="flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-[#1e3050]" />
-        <div className="h-3.5 w-28 bg-[#1e3050] rounded-md" />
-        <div className="ml-auto h-5 w-14 bg-[#1e3050] rounded-full" />
-      </div>
-      <div className="h-3 w-full bg-[#1a2840] rounded-md" />
-      <div className="flex justify-end">
-        <div className="h-5 w-24 bg-[#1a2840] rounded-full" />
-      </div>
-      <div className="h-3 w-16 bg-[#172035] rounded-md" />
-    </div>
-  )
+type ToastState = {
+  id: number
+  message: string
+  type: 'error' | 'success'
 }
 
 export default function Home() {
@@ -62,6 +31,37 @@ export default function Home() {
   const [isAddMonitorOpen, setIsAddMonitorOpen] = useState(false)
   const [monitors, setMonitors] = useState<Monitor[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [toast, setToast] = useState<ToastState | null>(null)
+
+  const { isConnected } = useWebSocket(
+    `ws://localhost:8000/ws/states?token=${authService.getToken()}`,
+    (raw) => {
+      try {
+        const payload = JSON.parse(raw) as MonitorStateMessage
+        if (
+          typeof payload.monitor_name !== 'string' ||
+          typeof payload.monitorId !== 'string' ||
+          typeof payload.is_up !== 'boolean'
+        ) {
+          return
+        }
+
+        setMonitors((prev) =>
+          prev.map((m) => (m.id === payload.monitorId ? { ...m, is_up: payload.is_up } : m)),
+        )
+
+        setToast({
+          id: Date.now(),
+          message: payload.is_up
+            ? `${payload.monitor_name} is back UP`
+            : `${payload.monitor_name} is DOWN`,
+          type: payload.is_up ? 'success' : 'error',
+        })
+      } catch {
+        // Ignore malformed or non-JSON WebSocket messages
+      }
+    },
+  )
 
   const qtdMonitors = monitors.length
   const qtdMonitorsUp = monitors.filter((monitor) => monitor.is_active && monitor.is_up).length
@@ -138,10 +138,18 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-1.5">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+              {isConnected && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+              )}
+              <span
+                className={`relative inline-flex rounded-full h-2 w-2 ${
+                  isConnected ? 'bg-emerald-400' : 'bg-slate-500'
+                }`}
+              />
             </span>
-            <span className="text-xs text-[#2e4560]">Live checks running</span>
+            <span className="text-xs text-[#2e4560]">
+              {isConnected ? 'Live checks running' : 'Connecting…'}
+            </span>
           </div>
         </div>
 
@@ -184,6 +192,15 @@ export default function Home() {
         <AddMonitor
           onClose={() => setIsAddMonitorOpen(false)}
           onCreated={loadMonitors}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onDismiss={() => setToast(null)}
         />
       )}
     </div>

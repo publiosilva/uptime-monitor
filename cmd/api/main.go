@@ -65,6 +65,7 @@ func main() {
 
 	authHandler := factory.NewAuthHandler(db, &cfg)
 	monitorHandler := factory.NewMonitorHandler(db)
+	queryHandler := factory.NewQueryHandler(db, &cfg)
 
 	r := chi.NewRouter()
 	r.Use(chimiddleware.Logger)
@@ -88,6 +89,8 @@ func main() {
 		r.Get("/monitors/{id}", monitorHandler.Get)
 		r.Put("/monitors/{id}", monitorHandler.Update)
 		r.Delete("/monitors/{id}", monitorHandler.Delete)
+
+		r.Post("/query", queryHandler.Ask)
 	})
 
 	r.Handle("/graphql", playground.Handler("GraphQL playground", "/query"))

@@ -12,6 +12,8 @@ require (
 	golang.org/x/crypto v0.53.0
 )
 
+require github.com/pgvector/pgvector-go v0.4.1
+
 require (
 	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/coder/websocket v1.8.14 // indirect

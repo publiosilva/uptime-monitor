@@ -25,7 +25,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./backend/db/migrations:/migrations:ro
+      - ./db/migrations:/migrations:ro
     command:
       - -path=/migrations
       - -database=postgres://${POSTGRES_USER:-uptime}:${POSTGRES_PASSWORD:-uptime}@postgres:5432/${POSTGRES_DB:-uptime_monitor}?sslmode=disable
